@@ -1,0 +1,74 @@
+[
+  {
+    "matchId": "1",
+    "market": "竞彩胜平负",
+    "homeWin": 1.78,
+    "draw": 3.25,
+    "awayWin": 4.2,
+    "handicap": "-0.5",
+    "handicapHome": 2.05,
+    "handicapAway": 1.7,
+    "updatedAt": "2026-06-12T08:00:00+08:00",
+    "source": "seed"
+  },
+  {
+    "matchId": "2",
+    "market": "竞彩胜平负",
+    "homeWin": 2.2,
+    "draw": 3.05,
+    "awayWin": 2.9,
+    "handicap": "0",
+    "handicapHome": 1.9,
+    "handicapAway": 1.86,
+    "updatedAt": "2026-06-12T08:00:00+08:00",
+    "source": "seed"
+  },
+  {
+    "matchId": "3",
+    "market": "竞彩胜平负",
+    "homeWin": 2.05,
+    "draw": 3.1,
+    "awayWin": 3.35,
+    "handicap": "-0.25",
+    "handicapHome": 1.95,
+    "handicapAway": 1.81,
+    "updatedAt": "2026-06-12T08:00:00+08:00",
+    "source": "seed"
+  },
+  {
+    "matchId": "4",
+    "market": "竞彩胜平负",
+    "homeWin": 1.62,
+    "draw": 3.55,
+    "awayWin": 4.8,
+    "handicap": "-0.75",
+    "handicapHome": 1.95,
+    "handicapAway": 1.8,
+    "updatedAt": "2026-06-12T08:00:00+08:00",
+    "source": "seed"
+  },
+  {
+    "matchId": "5",
+    "market": "竞彩胜平负",
+    "homeWin": 4.6,
+    "draw": 3.55,
+    "awayWin": 1.64,
+    "handicap": "+0.75",
+    "handicapHome": 1.84,
+    "handicapAway": 1.92,
+    "updatedAt": "2026-06-12T08:00:00+08:00",
+    "source": "seed"
+  },
+  {
+    "matchId": "6",
+    "market": "竞彩胜平负",
+    "homeWin": 1.74,
+    "draw": 3.4,
+    "awayWin": 4.35,
+    "handicap": "-0.5",
+    "handicapHome": 1.92,
+    "handicapAway": 1.84,
+    "updatedAt": "2026-06-12T08:00:00+08:00",
+    "source": "seed"
+  }
+]

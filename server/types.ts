@@ -1,0 +1,74 @@
+export type DataSourceConfig = {
+  type: 'generic-json' | 'worldcup26' | 'csv' | 'sporttery-500'
+  url?: string
+  localFile?: string
+  timeoutMs?: number
+}
+
+export type ModelProvider = {
+  id: string
+  name: string
+  kind: 'openai-compatible'
+  enabled: boolean
+  baseURL: string
+  apiKey: string
+  model: string
+}
+
+export type AppConfig = {
+  schedule: DataSourceConfig
+  odds: DataSourceConfig
+  providers: ModelProvider[]
+}
+
+export type Match = {
+  id: string
+  date: string
+  stage: string
+  group?: string
+  homeTeam: string
+  awayTeam: string
+  homeScore?: number
+  awayScore?: number
+  matchday?: string
+  venue?: string
+  city?: string
+  status: 'scheduled' | 'live' | 'finished'
+}
+
+export type Odds = {
+  matchId: string
+  homeTeam?: string
+  awayTeam?: string
+  matchTime?: string
+  market: string
+  homeWin?: number
+  draw?: number
+  awayWin?: number
+  handicap?: string
+  handicapHome?: number
+  handicapDraw?: number
+  handicapAway?: number
+  updatedAt?: string
+  source?: string
+  cached?: boolean
+}
+
+export type Prediction = {
+  matchId: string
+  providerId: string
+  providerName: string
+  model: string
+  predictedResult: 'home' | 'draw' | 'away'
+  scoreline: string
+  confidence: number
+  keyFactors: string[]
+  riskNotes: string[]
+  webContext: {
+    title: string
+    url: string
+    snippet: string
+  }[]
+  rawText: string
+  createdAt: string
+}

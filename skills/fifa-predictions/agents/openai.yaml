@@ -1,0 +1,4 @@
+interface:
+  display_name: "FIFA Predictions"
+  short_description: "Run and maintain the World Cup AI prediction tool."
+  default_prompt: "Use this skill to start the FIFA predictions app, verify live schedule and odds data, run model predictions, and prepare the project for release."

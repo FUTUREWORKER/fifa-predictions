@@ -1,0 +1,79 @@
+{
+  "name": "fifa-predictions",
+  "version": "0.1.0",
+  "description": "A local World Cup AI prediction dashboard with live fixtures, scraped public odds, multi-model predictions, caching, and a CLI.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_GITHUB_USERNAME/fifa-predictions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_GITHUB_USERNAME/fifa-predictions/issues"
+  },
+  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/fifa-predictions#readme",
+  "keywords": [
+    "world-cup",
+    "football",
+    "sports-analytics",
+    "ai",
+    "predictions",
+    "cli"
+  ],
+  "files": [
+    "bin",
+    "cli",
+    "config/providers.example.json",
+    "data/*.seed.json",
+    "server",
+    "src",
+    "public",
+    "index.html",
+    "vite.config.ts",
+    "tsconfig*.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "fifa-predictions": "./bin/fifa-predictions.js"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:web": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "start": "tsx server/index.ts",
+    "cli": "tsx cli/index.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dayjs": "^1.11.21",
+    "express": "^5.2.1",
+    "lucide-react": "^1.17.0",
+    "papaparse": "^5.5.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.12.3",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^10.0.3",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "tsx": "^4.22.4",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.12"
+  }
+}

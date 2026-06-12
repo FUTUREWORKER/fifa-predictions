@@ -1,0 +1,43 @@
+{
+  "schedule": {
+    "type": "worldcup26",
+    "url": "https://worldcup26.ir/get/games",
+    "localFile": "data/schedule.seed.json",
+    "timeoutMs": 10000
+  },
+  "odds": {
+    "type": "sporttery-500",
+    "url": "https://trade.500.com/jczq/",
+    "localFile": "",
+    "timeoutMs": 10000
+  },
+  "providers": [
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "kind": "openai-compatible",
+      "enabled": false,
+      "baseURL": "https://api.deepseek.com",
+      "apiKey": "填入你的 DeepSeek API Key",
+      "model": "deepseek-chat"
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen",
+      "kind": "openai-compatible",
+      "enabled": false,
+      "baseURL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "apiKey": "填入你的通义千问 API Key",
+      "model": "qwen-plus"
+    },
+    {
+      "id": "gpt",
+      "name": "GPT",
+      "kind": "openai-compatible",
+      "enabled": false,
+      "baseURL": "https://api.openai.com/v1",
+      "apiKey": "填入你的 OpenAI API Key",
+      "model": "gpt-4.1-mini"
+    }
+  ]
+}
