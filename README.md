@@ -10,7 +10,7 @@
 
 > This project is for research, learning, and prototyping only. Odds scraping depends on public page structure and should be replaced with an authorized data provider for production use. Never commit real API keys.
 
-![FIFA Predictions dashboard](docs/screenshots/dashboard.png)
+![FIFA Predictions dashboard](docs/screenshots/dashboard.en.png)
 
 ## Features
 

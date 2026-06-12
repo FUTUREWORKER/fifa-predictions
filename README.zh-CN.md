@@ -10,7 +10,7 @@
 
 > 本项目仅用于研究、学习和原型验证。盘口抓取依赖公开网页结构，生产环境请替换为授权数据源。请勿将真实 API Key 提交到仓库。
 
-![世界杯赛果 AI 预测界面](docs/screenshots/dashboard.png)
+![世界杯赛果 AI 预测界面](docs/screenshots/dashboard.zh-CN.png)
 
 ## 功能特性
 
