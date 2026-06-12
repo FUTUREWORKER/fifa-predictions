@@ -58,6 +58,39 @@
   background: rgba(255, 255, 255, 0.14);
 }
 
+.language-switch {
+  position: absolute;
+  top: 28px;
+  right: clamp(22px, 5vw, 72px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: rgba(247, 251, 255, 0.72);
+  background: rgba(5, 10, 18, 0.42);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(18px);
+}
+
+.language-switch button {
+  border: 0;
+  color: rgba(247, 251, 255, 0.62);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.language-switch button.active {
+  color: #10261f;
+  background: linear-gradient(135deg, #ffd66b, #34d399);
+  border-radius: 999px;
+  padding: 5px 9px;
+}
+
 .hero-copy {
   max-width: 960px;
 }
@@ -884,6 +917,12 @@ h1 {
     align-items: flex-start;
     flex-direction: column;
     gap: 22px;
+    padding-top: 86px;
+  }
+
+  .language-switch {
+    left: clamp(22px, 5vw, 72px);
+    right: auto;
   }
 
   .hero-scoreboard,
