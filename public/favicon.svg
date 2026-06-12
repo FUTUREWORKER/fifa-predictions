@@ -1,21 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <radialGradient id="ballShade" cx="30%" cy="24%" r="70%">
-      <stop offset="0" stop-color="#fff"/>
-      <stop offset="0.58" stop-color="#f7f7f2"/>
-      <stop offset="1" stop-color="#d8ddd6"/>
+    <radialGradient id="shade" cx="28%" cy="22%" r="72%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.62" stop-color="#f7f8f5"/>
+      <stop offset="1" stop-color="#d7ddd6"/>
     </radialGradient>
-    <linearGradient id="grass" x1="14" x2="50" y1="54" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#31d79a"/>
-      <stop offset="1" stop-color="#ffd966"/>
-    </linearGradient>
   </defs>
-  <circle cx="32" cy="32" r="29" fill="#0a1918"/>
-  <circle cx="32" cy="31" r="24" fill="url(#ballShade)" stroke="#fff" stroke-width="2"/>
-  <path fill="#101820" d="m32 17 9 7-4 11H27l-4-11 9-7Z"/>
-  <path fill="#101820" d="m16 29 8-5 4 11-7 7-7-4a22 22 0 0 1 2-9Z"/>
-  <path fill="#101820" d="m48 29-8-5-4 11 7 7 7-4a22 22 0 0 0-2-9Z"/>
-  <path fill="#101820" d="m24 47 3-12h10l3 12a22 22 0 0 1-16 0Z"/>
-  <path fill="none" stroke="#101820" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m23 24-4-7m22 7 4-7M21 42l-6 5m28-5 6 5M27 35l-6 7m16-7 6 7"/>
-  <path fill="url(#grass)" d="M14 54c6 3 30 3 36 0-3 5-9 8-18 8s-15-3-18-8Z"/>
+  <circle cx="32" cy="32" r="29" fill="url(#shade)" stroke="#111827" stroke-width="3"/>
+  <path fill="#111827" d="m32 18 10 7-4 12H26l-4-12 10-7Z"/>
+  <path fill="#111827" d="M13 27c3-7 8-12 14-14l-5 11-10 6c0-1 0-2 1-3Z"/>
+  <path fill="#111827" d="M51 27c-3-7-8-12-14-14l5 11 10 6c0-1 0-2-1-3Z"/>
+  <path fill="#111827" d="M18 50c-5-5-8-11-8-18l11 9 2 13c-2-1-4-2-5-4Z"/>
+  <path fill="#111827" d="M46 50c5-5 8-11 8-18l-11 9-2 13c2-1 4-2 5-4Z"/>
+  <path fill="#111827" d="M25 55h14l-7 4-7-4Z"/>
+  <path fill="none" stroke="#111827" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="m22 25-10 5m30-5 10 5M26 37l-5 4m17-4 5 4m-17-4-3 17m15-17 3 17M27 13l5 5 5-5"/>
 </svg>
