@@ -6,12 +6,12 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR_GITHUB_USERNAME/fifa-predictions.git"
+    "url": "git+https://github.com/FUTUREWORKER/fifa-predictions.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_GITHUB_USERNAME/fifa-predictions/issues"
+    "url": "https://github.com/FUTUREWORKER/fifa-predictions/issues"
   },
-  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/fifa-predictions#readme",
+  "homepage": "https://github.com/FUTUREWORKER/fifa-predictions#readme",
   "keywords": [
     "world-cup",
     "football",
