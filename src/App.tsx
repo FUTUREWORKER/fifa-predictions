@@ -85,8 +85,11 @@ type PerformancePrediction = {
   matchDate: string
   matchName: string
   actualResult: Prediction['predictedResult']
+  actualScoreline: string
   predictedResult: Prediction['predictedResult']
+  predictedScoreline: string
   correct: boolean
+  scorelineCorrect: boolean
   confidence: number
   scoreline: string
   createdAt: string
@@ -99,6 +102,8 @@ type PerformanceTrendPoint = {
   total: number
   correct: number
   accuracy: number
+  scorelineCorrect: number
+  scorelineAccuracy: number
 }
 
 type ProviderPerformance = {
@@ -107,7 +112,9 @@ type ProviderPerformance = {
   model: string
   total: number
   correct: number
+  scorelineCorrect: number
   accuracy: number
+  scorelineAccuracy: number
   predictions: PerformancePrediction[]
   trend: PerformanceTrendPoint[]
 }
@@ -172,12 +179,17 @@ const copy = {
     evaluatedPredictions: '已评估预测',
     finishedForReview: '可回测完赛',
     accuracyTrend: '命中率走势',
+    scorelineAccuracyTrend: '比分命中率走势',
     latestAccuracy: '当前命中率',
+    latestScorelineAccuracy: '当前比分命中率',
     correctCount: '命中',
+    scorelineCorrectCount: '比分命中',
     predictionHistory: '预测历史',
     noPerformance: '暂无可评估的预测历史。先对已完赛或即将完赛的比赛生成预测，完赛后这里会自动统计。',
     actual: '赛果',
+    actualScore: '实际比分',
     predicted: '预测',
+    predictedScore: '预测比分',
     correct: '正确',
     missed: '未中',
     status: {
@@ -244,12 +256,17 @@ const copy = {
     evaluatedPredictions: 'evaluated predictions',
     finishedForReview: 'finished matches',
     accuracyTrend: 'Accuracy Trend',
+    scorelineAccuracyTrend: 'Scoreline Accuracy Trend',
     latestAccuracy: 'Current accuracy',
+    latestScorelineAccuracy: 'Current scoreline accuracy',
     correctCount: 'correct',
+    scorelineCorrectCount: 'scoreline correct',
     predictionHistory: 'Prediction History',
     noPerformance: 'No evaluated prediction history yet. Generate predictions first; finished matches will be scored here automatically.',
     actual: 'Actual',
+    actualScore: 'Actual score',
     predicted: 'Predicted',
+    predictedScore: 'Predicted score',
     correct: 'Correct',
     missed: 'Missed',
     status: {
@@ -467,9 +484,11 @@ const performanceColors = ['#34d399', '#8b5cf6', '#f8fafc', '#ffd66b', '#38bdf8'
 function AccuracyTrendChart({
   providers,
   language,
+  metric,
 }: {
   providers: ProviderPerformance[]
   language: Language
+  metric: 'accuracy' | 'scorelineAccuracy'
 }) {
   const width = 860
   const height = 260
@@ -501,8 +520,8 @@ function AccuracyTrendChart({
         const color = performanceColors[providerIndex % performanceColors.length]
         const points = provider.trend.map((point, index) => ({
           x: xFor(index),
-          y: yFor(point.accuracy),
-          label: `${provider.providerName} ${Math.round(point.accuracy * 100)}%`,
+          y: yFor(point[metric]),
+          label: `${provider.providerName} ${Math.round(point[metric] * 100)}%`,
         }))
         const path = points
           .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
@@ -600,9 +619,19 @@ function PerformanceView({
                   <strong>{Math.round(provider.accuracy * 100)}%</strong>
                 </div>
                 <div className="metric-row">
+                  <span>{ui.latestScorelineAccuracy}</span>
+                  <strong>{Math.round(provider.scorelineAccuracy * 100)}%</strong>
+                </div>
+                <div className="metric-row">
                   <span>{ui.correctCount}</span>
                   <strong>
                     {provider.correct}/{provider.total}
+                  </strong>
+                </div>
+                <div className="metric-row">
+                  <span>{ui.scorelineCorrectCount}</span>
+                  <strong>
+                    {provider.scorelineCorrect}/{provider.total}
                   </strong>
                 </div>
               </article>
@@ -614,7 +643,31 @@ function PerformanceView({
               <TrendingUp size={18} />
               {ui.accuracyTrend}
             </div>
-            <AccuracyTrendChart providers={rankedProviders} language={language} />
+            <AccuracyTrendChart
+              providers={rankedProviders}
+              language={language}
+              metric="accuracy"
+            />
+            <div className="chart-legend">
+              {rankedProviders.map((provider, index) => (
+                <span key={provider.providerId}>
+                  <i style={{ background: performanceColors[index % performanceColors.length] }} />
+                  {provider.providerName}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="trend-panel">
+            <div className="panel-title">
+              <TrendingUp size={18} />
+              {ui.scorelineAccuracyTrend}
+            </div>
+            <AccuracyTrendChart
+              providers={rankedProviders}
+              language={language}
+              metric="scorelineAccuracy"
+            />
             <div className="chart-legend">
               {rankedProviders.map((provider, index) => (
                 <span key={provider.providerId}>
@@ -649,6 +702,14 @@ function PerformanceView({
                     <div>
                       <span>{ui.actual}</span>
                       <strong>{ui.result[item.actualResult]}</strong>
+                    </div>
+                    <div>
+                      <span>{ui.predictedScore}</span>
+                      <strong>{item.predictedScoreline || item.scoreline}</strong>
+                    </div>
+                    <div>
+                      <span>{ui.actualScore}</span>
+                      <strong>{item.actualScoreline}</strong>
                     </div>
                     <b className={item.correct ? 'hit' : 'miss'}>
                       {item.correct ? ui.correct : ui.missed}

@@ -906,7 +906,8 @@ h1 {
 
 .history-row {
   display: grid;
-  grid-template-columns: 34px minmax(180px, 1.5fr) repeat(2, minmax(100px, 0.7fr)) auto auto;
+  grid-template-columns:
+    34px minmax(180px, 1.5fr) repeat(4, minmax(92px, 0.7fr)) auto auto;
   gap: 12px;
   align-items: center;
   padding: 12px;

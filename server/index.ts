@@ -104,6 +104,20 @@ function actualResult(match: Match) {
   return 'draw'
 }
 
+function normalizeScoreline(value = '') {
+  const match = value
+    .replace(/[：:]/g, '-')
+    .replace(/\s+/g, '')
+    .match(/^(\d+)-(\d+)$/)
+  return match ? `${Number(match[1])}-${Number(match[2])}` : ''
+}
+
+function actualScoreline(match: Match) {
+  return typeof match.homeScore === 'number' && typeof match.awayScore === 'number'
+    ? `${match.homeScore}-${match.awayScore}`
+    : ''
+}
+
 app.get('/api/analytics/model-performance', async (_req, res, next) => {
   try {
     const config = await loadConfig()
@@ -124,8 +138,12 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
                 matchDate: match.date,
                 matchName: `${match.homeTeam} vs ${match.awayTeam}`,
                 actualResult: result,
+                actualScoreline: actualScoreline(match),
                 predictedResult: prediction.predictedResult,
+                predictedScoreline: normalizeScoreline(prediction.scoreline),
                 correct: prediction.predictedResult === result,
+                scorelineCorrect:
+                  normalizeScoreline(prediction.scoreline) === actualScoreline(match),
                 confidence: prediction.confidence,
                 scoreline: prediction.scoreline,
                 createdAt: prediction.createdAt,
@@ -136,8 +154,10 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
         .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime())
 
       let correct = 0
+      let scorelineCorrect = 0
       const trend = providerPredictions.map((item, index) => {
         if (item.correct) correct += 1
+        if (item.scorelineCorrect) scorelineCorrect += 1
         return {
           matchId: item.matchId,
           matchDate: item.matchDate,
@@ -145,6 +165,8 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
           total: index + 1,
           correct,
           accuracy: correct / (index + 1),
+          scorelineCorrect,
+          scorelineAccuracy: scorelineCorrect / (index + 1),
         }
       })
 
@@ -154,7 +176,11 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
         model: provider.model,
         total: providerPredictions.length,
         correct,
+        scorelineCorrect,
         accuracy: providerPredictions.length ? correct / providerPredictions.length : 0,
+        scorelineAccuracy: providerPredictions.length
+          ? scorelineCorrect / providerPredictions.length
+          : 0,
         predictions: providerPredictions,
         trend,
       }
