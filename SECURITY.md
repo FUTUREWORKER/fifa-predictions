@@ -4,4 +4,4 @@ Do not commit `config/providers.json`, `.env`, `.env.local`, or cache files that
 
 Model provider API keys are loaded from `config/providers.json`, which is ignored by git. Use `config/providers.example.json` as the public template.
 
-This project is for entertainment and learning only. It scrapes publicly available odds pages for demo use, and its predictions are not betting, investment, or decision-making advice. Respect source website terms, rate limits, and applicable laws before production use.
+This project is for entertainment and learning only. It scrapes publicly available odds pages for demo use, and its predictions are not betting, investment, or decision-making advice. Do not use this project for illegal activity, regulatory evasion, fraud, money laundering, illegal gambling, or any activity that violates applicable laws and regulations. Respect source website terms, rate limits, and applicable laws before production use.
