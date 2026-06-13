@@ -424,6 +424,12 @@ function hasStandardOdds(match?: Match) {
   )
 }
 
+function sortMatchesByTime(matches: Match[]) {
+  return [...matches].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  )
+}
+
 function scoreText(match: Match) {
   if (match.status === 'scheduled') return ''
   return `${match.homeScore ?? 0} - ${match.awayScore ?? 0}`
@@ -812,18 +818,19 @@ function App() {
       if (!matchesRes.ok || !configRes.ok) throw new Error(ui.dataRequestFailed)
       const matchesPayload = await matchesRes.json()
       const configPayload = await configRes.json()
+      const sortedMatches = sortMatchesByTime(matchesPayload.matches)
       const defaultMatch =
-        matchesPayload.matches.find((match: Match) => hasStandardOdds(match)) ??
-        matchesPayload.matches.find((match: Match) => match.odds) ??
-        matchesPayload.matches[0]
-      setMatches(matchesPayload.matches)
+        sortedMatches.find((match: Match) => hasStandardOdds(match)) ??
+        sortedMatches.find((match: Match) => match.odds) ??
+        sortedMatches[0]
+      setMatches(sortedMatches)
       setConfig(configPayload)
       setOddsStats({
         live: matchesPayload.oddsLiveCount ?? 0,
         cached: matchesPayload.oddsCachedCount ?? 0,
       })
       setSelectedMatchId((current) => {
-        const currentMatch = matchesPayload.matches.find(
+        const currentMatch = sortedMatches.find(
           (match: Match) => match.id === current,
         )
         if (!current || !hasStandardOdds(currentMatch)) return defaultMatch?.id || ''

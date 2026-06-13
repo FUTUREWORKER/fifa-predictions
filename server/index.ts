@@ -46,10 +46,12 @@ app.get('/api/matches', async (_req, res, next) => {
       oddsSource: odds.source,
       oddsLiveCount: mergedOdds.liveCount,
       oddsCachedCount: mergedOdds.cachedCount,
-      matches: matches.matches.map((match) => ({
-        ...match,
-        odds: findOddsForMatch(match, mergedOdds.odds),
-      })),
+      matches: [...matches.matches]
+        .sort(byMatchTime)
+        .map((match) => ({
+          ...match,
+          odds: findOddsForMatch(match, mergedOdds.odds),
+        })),
     })
   } catch (error) {
     next(error)
@@ -75,6 +77,10 @@ function findOddsForMatch(match: Match, odds: Odds[]) {
     ) ??
     null
   )
+}
+
+function byMatchTime(a: Match, b: Match) {
+  return new Date(a.date).getTime() - new Date(b.date).getTime()
 }
 
 const predictSchema = z.object({
