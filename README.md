@@ -27,9 +27,23 @@
 
 ## Quick Start
 
+Clone and install:
+
 ```bash
+git clone https://github.com/FUTUREWORKER/fifa-predictions.git
+cd fifa-predictions
 npm install
+```
+
+Create your local provider config:
+
+```bash
 cp config/providers.example.json config/providers.json
+```
+
+Fill `config/providers.json` with your own `baseURL`, `apiKey`, and `model`, then start the app:
+
+```bash
 npm run dev
 ```
 
@@ -65,6 +79,23 @@ Edit `config/providers.json`:
 ```
 
 `config/providers.json` is ignored by git. Keep secrets local.
+
+## Install As A CLI
+
+Use from a cloned checkout:
+
+```bash
+npm link
+fifa-predictions check-data
+fifa-predictions serve
+```
+
+Or run directly with npm:
+
+```bash
+npm run cli -- check-data
+npm run cli -- serve
+```
 
 ## CLI
 
@@ -157,6 +188,15 @@ cp -R skills/fifa-predictions ~/.codex/skills/
 ```
 
 Then ask Codex to use `$fifa-predictions`.
+
+## Agent Support
+
+This repository includes two agent-friendly entry points:
+
+- `AGENTS.md`: portable project instructions for general coding agents that read repository guidance.
+- `skills/fifa-predictions/`: a Codex Skill package for Codex environments that support Skills.
+
+For agents that do not support Codex Skills, point them at `AGENTS.md` and ask them to follow the install, safety, data, and validation rules there.
 
 ## Development
 

@@ -27,9 +27,23 @@
 
 ## 快速开始
 
+克隆并安装：
+
 ```bash
+git clone https://github.com/FUTUREWORKER/fifa-predictions.git
+cd fifa-predictions
 npm install
+```
+
+创建本地模型配置：
+
+```bash
 cp config/providers.example.json config/providers.json
+```
+
+在 `config/providers.json` 中填入你自己的 `baseURL`、`apiKey` 和 `model`，然后启动：
+
+```bash
 npm run dev
 ```
 
@@ -65,6 +79,23 @@ http://localhost:5174
 ```
 
 `config/providers.json` 已被 `.gitignore` 忽略，不会提交到 GitHub。真实 API Key 请只保存在本地。
+
+## 作为 CLI 安装
+
+在克隆后的项目目录中：
+
+```bash
+npm link
+fifa-predictions check-data
+fifa-predictions serve
+```
+
+也可以直接通过 npm 运行：
+
+```bash
+npm run cli -- check-data
+npm run cli -- serve
+```
 
 ## CLI 用法
 
@@ -157,6 +188,15 @@ cp -R skills/fifa-predictions ~/.codex/skills/
 ```
 
 之后可以让 Codex 使用 `$fifa-predictions` 处理赛程、盘口、预测和缓存相关工作。
+
+## Agent 支持
+
+仓库提供两个面向 Agent 的入口：
+
+- `AGENTS.md`：通用编码 Agent 可读的项目说明，包含安装、安全、数据和校验规则。
+- `skills/fifa-predictions/`：适用于支持 Skills 的 Codex 环境。
+
+严格来说，不同 Agent 平台的 Skill 格式并不完全统一；所以这个项目同时提供 Codex Skill 和通用 `AGENTS.md`，尽量让 Codex、CLI Agent 以及其他通用编码 Agent 都能按同一套规则使用。
 
 ## 开发
 

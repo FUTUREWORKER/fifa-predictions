@@ -32,6 +32,8 @@
     "vite.config.ts",
     "tsconfig*.json",
     "README.md",
+    "README.zh-CN.md",
+    "AGENTS.md",
     "LICENSE"
   ],
   "bin": {
