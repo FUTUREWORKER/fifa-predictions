@@ -101,6 +101,7 @@ const copy = {
     homeMark: '[主]',
     single: '单',
     pass: '过',
+    marketNotOpen: '未开盘',
     homeWin: '主胜',
     draw: '平',
     homeLoss: '主负',
@@ -157,6 +158,7 @@ const copy = {
     homeMark: '[Home]',
     single: '1X2',
     pass: 'FT',
+    marketNotOpen: 'Not open',
     homeWin: 'Home',
     draw: 'Draw',
     homeLoss: 'Away',
@@ -365,7 +367,9 @@ function TeamFlag({ team, size = 'large' }: { team: string; size?: 'large' | 'sm
   const code = flagCodes[team]
   return (
     <span className={`team-flag ${size}`} aria-hidden="true">
-      {code ? (
+      {code === 'ch' ? (
+        <span className="swiss-cross" />
+      ) : code ? (
         <img src={`https://flagcdn.com/w80/${code}.png`} alt="" loading="lazy" />
       ) : (
         team.slice(0, 1)
@@ -443,6 +447,8 @@ function App() {
       (prediction) => prediction.predictedResult === result,
     )
   }
+
+  const standardMarketNotOpen = Boolean(selectedMatch?.odds && !hasStandardOdds(selectedMatch))
 
   function providerForPrediction(prediction: Prediction) {
     return (
@@ -740,9 +746,13 @@ function App() {
                     <span className="single">{ui.single}</span>
                     <span>{ui.pass}</span>
                   </div>
-                  <div className="odds-cell">
+                  <div className={standardMarketNotOpen ? 'odds-cell unavailable' : 'odds-cell'}>
                     <span>{ui.homeWin}</span>
-                    <strong>{formatOdds(selectedMatch.odds?.homeWin)}</strong>
+                    <strong>
+                      {standardMarketNotOpen
+                        ? ui.marketNotOpen
+                        : formatOdds(selectedMatch.odds?.homeWin)}
+                    </strong>
                     <div className="prediction-markers">
                       {predictionsForResult('home').map((prediction) => (
                         <ModelLogo
@@ -752,9 +762,13 @@ function App() {
                       ))}
                     </div>
                   </div>
-                  <div className="odds-cell">
+                  <div className={standardMarketNotOpen ? 'odds-cell unavailable' : 'odds-cell'}>
                     <span>{ui.draw}</span>
-                    <strong>{formatOdds(selectedMatch.odds?.draw)}</strong>
+                    <strong>
+                      {standardMarketNotOpen
+                        ? ui.marketNotOpen
+                        : formatOdds(selectedMatch.odds?.draw)}
+                    </strong>
                     <div className="prediction-markers">
                       {predictionsForResult('draw').map((prediction) => (
                         <ModelLogo
@@ -764,9 +778,13 @@ function App() {
                       ))}
                     </div>
                   </div>
-                  <div className="odds-cell">
+                  <div className={standardMarketNotOpen ? 'odds-cell unavailable' : 'odds-cell'}>
                     <span>{ui.homeLoss}</span>
-                    <strong>{formatOdds(selectedMatch.odds?.awayWin)}</strong>
+                    <strong>
+                      {standardMarketNotOpen
+                        ? ui.marketNotOpen
+                        : formatOdds(selectedMatch.odds?.awayWin)}
+                    </strong>
                     <div className="prediction-markers">
                       {predictionsForResult('away').map((prediction) => (
                         <ModelLogo
