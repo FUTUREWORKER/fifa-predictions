@@ -442,7 +442,6 @@ function App() {
     ) ?? selectedPredictions[0]
 
   function predictionsForResult(result: Prediction['predictedResult']) {
-    if (!hasStandardOdds(selectedMatch)) return []
     return selectedPredictions.filter(
       (prediction) => prediction.predictedResult === result,
     )
