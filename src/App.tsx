@@ -10,6 +10,7 @@ import {
   RadioTower,
   RefreshCw,
   Sparkles,
+  TrendingUp,
   Trophy,
 } from 'lucide-react'
 import './App.css'
@@ -77,6 +78,45 @@ type Prediction = {
 }
 
 type Language = 'zh' | 'en'
+type PageView = 'matches' | 'performance'
+
+type PerformancePrediction = {
+  matchId: string
+  matchDate: string
+  matchName: string
+  actualResult: Prediction['predictedResult']
+  predictedResult: Prediction['predictedResult']
+  correct: boolean
+  confidence: number
+  scoreline: string
+  createdAt: string
+}
+
+type PerformanceTrendPoint = {
+  matchId: string
+  matchDate: string
+  matchName: string
+  total: number
+  correct: number
+  accuracy: number
+}
+
+type ProviderPerformance = {
+  providerId: string
+  providerName: string
+  model: string
+  total: number
+  correct: number
+  accuracy: number
+  predictions: PerformancePrediction[]
+  trend: PerformanceTrendPoint[]
+}
+
+type PerformanceSummary = {
+  finishedMatches: number
+  evaluatedPredictions: number
+  providers: ProviderPerformance[]
+}
 
 const copy = {
   zh: {
@@ -94,6 +134,8 @@ const copy = {
     cachedOdds: '缓存',
     visibleOdds: '页面可用',
     matchesUnit: '场',
+    matchesPage: '比赛预测',
+    performancePage: '模型表现',
     matchList: '比赛列表',
     loadingMatches: '加载赛程中',
     groupSuffix: '组',
@@ -125,6 +167,19 @@ const copy = {
     cacheReadFailed: '缓存读取失败',
     predictFailed: '预测失败',
     modelPredictFailed: '模型预测失败',
+    performanceTitle: '模型预测表现',
+    performanceSubtitle: '基于已完赛比分回测预测缓存，比较每个模型的历史命中率。',
+    evaluatedPredictions: '已评估预测',
+    finishedForReview: '可回测完赛',
+    accuracyTrend: '命中率走势',
+    latestAccuracy: '当前命中率',
+    correctCount: '命中',
+    predictionHistory: '预测历史',
+    noPerformance: '暂无可评估的预测历史。先对已完赛或即将完赛的比赛生成预测，完赛后这里会自动统计。',
+    actual: '赛果',
+    predicted: '预测',
+    correct: '正确',
+    missed: '未中',
     status: {
       scheduled: '未开赛',
       live: '进行中',
@@ -151,6 +206,8 @@ const copy = {
     cachedOdds: 'cached',
     visibleOdds: 'visible',
     matchesUnit: 'matches',
+    matchesPage: 'Match Desk',
+    performancePage: 'Performance',
     matchList: 'Matches',
     loadingMatches: 'Loading fixtures',
     groupSuffix: 'Group',
@@ -182,6 +239,19 @@ const copy = {
     cacheReadFailed: 'Cache read failed',
     predictFailed: 'Prediction failed',
     modelPredictFailed: 'Model prediction failed',
+    performanceTitle: 'Model Performance',
+    performanceSubtitle: 'Backtest cached predictions against finished match results and compare model accuracy.',
+    evaluatedPredictions: 'evaluated predictions',
+    finishedForReview: 'finished matches',
+    accuracyTrend: 'Accuracy Trend',
+    latestAccuracy: 'Current accuracy',
+    correctCount: 'correct',
+    predictionHistory: 'Prediction History',
+    noPerformance: 'No evaluated prediction history yet. Generate predictions first; finished matches will be scored here automatically.',
+    actual: 'Actual',
+    predicted: 'Predicted',
+    correct: 'Correct',
+    missed: 'Missed',
     status: {
       scheduled: 'Scheduled',
       live: 'Live',
@@ -392,6 +462,215 @@ function ModelLogo({ provider }: { provider: Pick<ProviderStatus, 'id' | 'name'>
   )
 }
 
+const performanceColors = ['#34d399', '#8b5cf6', '#f8fafc', '#ffd66b', '#38bdf8']
+
+function AccuracyTrendChart({
+  providers,
+  language,
+}: {
+  providers: ProviderPerformance[]
+  language: Language
+}) {
+  const width = 860
+  const height = 260
+  const padding = { top: 24, right: 28, bottom: 40, left: 46 }
+  const maxPoints = Math.max(1, ...providers.map((provider) => provider.trend.length))
+  const plotWidth = width - padding.left - padding.right
+  const plotHeight = height - padding.top - padding.bottom
+
+  const xFor = (index: number) =>
+    padding.left + (maxPoints <= 1 ? plotWidth / 2 : (index / (maxPoints - 1)) * plotWidth)
+  const yFor = (accuracy: number) => padding.top + (1 - accuracy) * plotHeight
+
+  return (
+    <svg className="accuracy-chart" viewBox={`0 0 ${width} ${height}`} role="img">
+      {[0, 0.25, 0.5, 0.75, 1].map((tick) => (
+        <g key={tick}>
+          <line
+            x1={padding.left}
+            x2={width - padding.right}
+            y1={yFor(tick)}
+            y2={yFor(tick)}
+          />
+          <text x={12} y={yFor(tick) + 4}>
+            {Math.round(tick * 100)}%
+          </text>
+        </g>
+      ))}
+      {providers.map((provider, providerIndex) => {
+        const color = performanceColors[providerIndex % performanceColors.length]
+        const points = provider.trend.map((point, index) => ({
+          x: xFor(index),
+          y: yFor(point.accuracy),
+          label: `${provider.providerName} ${Math.round(point.accuracy * 100)}%`,
+        }))
+        const path = points
+          .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+          .join(' ')
+        return (
+          <g key={provider.providerId} style={{ color }}>
+            {path ? <path d={path} stroke={color} /> : null}
+            {points.map((point, index) => (
+              <circle key={`${provider.providerId}:${index}`} cx={point.x} cy={point.y} r="4">
+                <title>{point.label}</title>
+              </circle>
+            ))}
+          </g>
+        )
+      })}
+      <text className="chart-axis-label" x={width / 2} y={height - 8}>
+        {language === 'zh' ? '按完赛时间累计' : 'Cumulative by finished match time'}
+      </text>
+    </svg>
+  )
+}
+
+function PerformanceView({
+  summary,
+  loading,
+  language,
+  ui,
+}: {
+  summary: PerformanceSummary | null
+  loading: boolean
+  language: Language
+  ui: (typeof copy)[Language]
+}) {
+  const providers = summary?.providers ?? []
+  const rankedProviders = [...providers].sort((a, b) => b.accuracy - a.accuracy)
+  const providerById = new Map(providers.map((provider) => [provider.providerId, provider]))
+  const history = providers
+    .flatMap((provider) =>
+      provider.predictions.map((prediction) => ({
+        ...prediction,
+        providerId: provider.providerId,
+        providerName: provider.providerName,
+      })),
+    )
+    .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())
+
+  if (loading) {
+    return (
+      <section className="performance-board">
+        <div className="loading">
+          <Loader2 className="spin" size={20} />
+          {ui.loadingMatches}
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section className="performance-board">
+      <div className="performance-head">
+        <div>
+          <div className="panel-title">
+            <TrendingUp size={18} />
+            {ui.performanceTitle}
+          </div>
+          <p>{ui.performanceSubtitle}</p>
+        </div>
+        <div className="performance-stats">
+          <div>
+            <strong>{summary?.finishedMatches ?? 0}</strong>
+            <span>{ui.finishedForReview}</span>
+          </div>
+          <div>
+            <strong>{summary?.evaluatedPredictions ?? 0}</strong>
+            <span>{ui.evaluatedPredictions}</span>
+          </div>
+        </div>
+      </div>
+
+      {summary?.evaluatedPredictions ? (
+        <>
+          <div className="performance-cards">
+            {rankedProviders.map((provider) => (
+              <article className="performance-card" key={provider.providerId}>
+                <div className="performance-card-head">
+                  <ModelLogo provider={{ id: provider.providerId, name: provider.providerName }} />
+                  <div>
+                    <strong>{provider.providerName}</strong>
+                    <span>{provider.model}</span>
+                  </div>
+                  <b>{Math.round(provider.accuracy * 100)}%</b>
+                </div>
+                <div className="metric-row">
+                  <span>{ui.latestAccuracy}</span>
+                  <strong>{Math.round(provider.accuracy * 100)}%</strong>
+                </div>
+                <div className="metric-row">
+                  <span>{ui.correctCount}</span>
+                  <strong>
+                    {provider.correct}/{provider.total}
+                  </strong>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="trend-panel">
+            <div className="panel-title">
+              <TrendingUp size={18} />
+              {ui.accuracyTrend}
+            </div>
+            <AccuracyTrendChart providers={rankedProviders} language={language} />
+            <div className="chart-legend">
+              {rankedProviders.map((provider, index) => (
+                <span key={provider.providerId}>
+                  <i style={{ background: performanceColors[index % performanceColors.length] }} />
+                  {provider.providerName}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="history-panel">
+            <div className="panel-title">{ui.predictionHistory}</div>
+            <div className="history-list">
+              {history.map((item) => {
+                const provider = providerById.get(item.providerId)
+                return (
+                  <div className="history-row" key={`${item.matchId}:${item.providerId}`}>
+                    <ModelLogo
+                      provider={{
+                        id: item.providerId,
+                        name: item.providerName,
+                      }}
+                    />
+                    <div>
+                      <strong>{item.matchName}</strong>
+                      <span>{formatDate(item.matchDate, language, ui.timePending)}</span>
+                    </div>
+                    <div>
+                      <span>{ui.predicted}</span>
+                      <strong>{ui.result[item.predictedResult]}</strong>
+                    </div>
+                    <div>
+                      <span>{ui.actual}</span>
+                      <strong>{ui.result[item.actualResult]}</strong>
+                    </div>
+                    <b className={item.correct ? 'hit' : 'miss'}>
+                      {item.correct ? ui.correct : ui.missed}
+                    </b>
+                    <small>{provider?.providerName ?? item.providerName}</small>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="empty-prediction">
+          <TrendingUp size={28} />
+          <h3>{ui.performanceTitle}</h3>
+          <p>{ui.noPerformance}</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = window.localStorage.getItem('fifa-predictions-language')
@@ -402,8 +681,11 @@ function App() {
   const [selectedMatchId, setSelectedMatchId] = useState('')
   const [predictions, setPredictions] = useState<Record<string, Prediction>>({})
   const [activeAnalysisProviderId, setActiveAnalysisProviderId] = useState('')
+  const [view, setView] = useState<PageView>('matches')
+  const [performance, setPerformance] = useState<PerformanceSummary | null>(null)
   const [oddsStats, setOddsStats] = useState({ live: 0, cached: 0 })
   const [loading, setLoading] = useState(true)
+  const [performanceLoading, setPerformanceLoading] = useState(false)
   const [predicting, setPredicting] = useState(false)
   const [error, setError] = useState('')
   const ui = copy[language]
@@ -493,6 +775,21 @@ function App() {
     }
   }, [ui.dataRequestFailed, ui.loadFailed])
 
+  const loadPerformance = useCallback(async () => {
+    setPerformanceLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/analytics/model-performance')
+      const payload = await res.json()
+      if (!res.ok) throw new Error(payload.error ?? ui.loadFailed)
+      setPerformance(payload as PerformanceSummary)
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : ui.loadFailed)
+    } finally {
+      setPerformanceLoading(false)
+    }
+  }, [ui.loadFailed])
+
   async function runPrediction() {
     if (!selectedMatch || enabledProviders.length === 0) return
     setPredicting(true)
@@ -532,6 +829,7 @@ function App() {
         ),
       }))
       setActiveAnalysisProviderId(fulfilled[0]?.providerId ?? '')
+      void loadPerformance()
       if (rejected.length) {
         setError(
           rejected
@@ -551,10 +849,11 @@ function App() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadDashboard()
+      void loadPerformance()
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [loadDashboard])
+  }, [loadDashboard, loadPerformance])
 
   useEffect(() => {
     window.localStorage.setItem('fifa-predictions-language', language)
@@ -621,7 +920,14 @@ function App() {
             <span>{matches.length || '--'}</span>
             <small>{ui.fixturesCount}</small>
           </div>
-          <button type="button" onClick={loadDashboard} title={ui.refresh}>
+          <button
+            type="button"
+            onClick={() => {
+              void loadDashboard()
+              void loadPerformance()
+            }}
+            title={ui.refresh}
+          >
             <RefreshCw size={18} />
           </button>
         </div>
@@ -630,6 +936,22 @@ function App() {
       {error && <div className="error-banner">{error}</div>}
 
       <section className="control-strip">
+        <div className="view-switch">
+          <button
+            type="button"
+            className={view === 'matches' ? 'active' : ''}
+            onClick={() => setView('matches')}
+          >
+            {ui.matchesPage}
+          </button>
+          <button
+            type="button"
+            className={view === 'performance' ? 'active' : ''}
+            onClick={() => setView('performance')}
+          >
+            {ui.performancePage}
+          </button>
+        </div>
         <div className="status-pill">
           <RadioTower size={16} />
           {ui.scheduleSource}: {config?.schedule.url || config?.schedule.localFile || ui.notConfigured}
@@ -642,6 +964,16 @@ function App() {
         </div>
       </section>
 
+      {view === 'performance' ? (
+        <section className="workspace performance-workspace">
+          <PerformanceView
+            summary={performance}
+            loading={performanceLoading}
+            language={language}
+            ui={ui}
+          />
+        </section>
+      ) : (
       <section className="workspace">
         <aside className="match-rail">
           <div className="panel-title">
@@ -951,6 +1283,7 @@ function App() {
           )}
         </section>
       </section>
+      )}
     </main>
   )
 }

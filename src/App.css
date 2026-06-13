@@ -190,6 +190,34 @@ h1 {
   padding: 0 clamp(22px, 5vw, 72px) 22px;
 }
 
+.view-switch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(5, 10, 18, 0.46);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(18px);
+}
+
+.view-switch button {
+  min-height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(247, 251, 255, 0.72);
+  background: transparent;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.view-switch button.active {
+  color: #10261f;
+  background: linear-gradient(135deg, #ffd66b, #34d399);
+}
+
 .status-pill {
   min-height: 36px;
   padding: 8px 14px;
@@ -211,6 +239,10 @@ h1 {
   grid-template-columns: minmax(280px, 380px) 1fr;
   gap: 18px;
   padding: 0 clamp(22px, 5vw, 72px) 56px;
+}
+
+.performance-workspace {
+  grid-template-columns: 1fr;
 }
 
 .match-rail,
@@ -691,10 +723,228 @@ h1 {
 }
 
 .model-panel,
-.prediction-card {
+.prediction-card,
+.performance-board {
   margin-top: 14px;
   padding: 20px;
   border-radius: 8px;
+}
+
+.performance-board {
+  margin-top: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(5, 10, 18, 0.46);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(18px);
+}
+
+.performance-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.performance-head p {
+  margin-top: 10px;
+  max-width: 720px;
+  color: rgba(247, 251, 255, 0.66);
+}
+
+.performance-stats {
+  display: flex;
+  gap: 10px;
+}
+
+.performance-stats div {
+  display: grid;
+  place-items: center;
+  min-width: 112px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.performance-stats strong {
+  color: #fff;
+  font-size: 26px;
+}
+
+.performance-stats span {
+  color: rgba(247, 251, 255, 0.58);
+  font-size: 12px;
+}
+
+.performance-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.performance-card,
+.trend-panel,
+.history-panel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.performance-card {
+  padding: 16px;
+}
+
+.performance-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.performance-card-head div {
+  display: grid;
+  gap: 3px;
+}
+
+.performance-card-head strong {
+  color: #fff;
+}
+
+.performance-card-head span {
+  color: rgba(247, 251, 255, 0.58);
+  font-size: 13px;
+}
+
+.performance-card-head b {
+  margin-left: auto;
+  color: #34d399;
+  font-size: 28px;
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  color: rgba(247, 251, 255, 0.62);
+}
+
+.metric-row strong {
+  color: #fff;
+}
+
+.trend-panel,
+.history-panel {
+  margin-top: 14px;
+  padding: 18px;
+}
+
+.accuracy-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 12px;
+  overflow: visible;
+}
+
+.accuracy-chart line {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.accuracy-chart text {
+  fill: rgba(247, 251, 255, 0.54);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.accuracy-chart path {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.accuracy-chart circle {
+  fill: #fff;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.chart-axis-label {
+  text-anchor: middle;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(247, 251, 255, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.chart-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.history-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 34px minmax(180px, 1.5fr) repeat(2, minmax(100px, 0.7fr)) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.history-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.history-row strong {
+  color: #fff;
+}
+
+.history-row span,
+.history-row small {
+  color: rgba(247, 251, 255, 0.54);
+  font-size: 12px;
+}
+
+.history-row b {
+  justify-self: end;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.history-row .hit {
+  color: #10261f;
+  background: #34d399;
+}
+
+.history-row .miss {
+  color: #fff;
+  background: rgba(255, 95, 115, 0.74);
 }
 
 .provider-row {

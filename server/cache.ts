@@ -33,6 +33,11 @@ export async function getCachedPredictionsForMatch(matchId: string) {
   return Object.values(cache).filter((prediction) => prediction.matchId === matchId)
 }
 
+export async function getAllCachedPredictions() {
+  const cache = await readCache()
+  return Object.values(cache)
+}
+
 export async function setCachedPrediction(prediction: Prediction) {
   const cache = await readCache()
   cache[cacheKey(prediction.matchId, prediction.providerId)] = prediction

@@ -5,7 +5,12 @@ import { loadConfig, maskConfig } from './config'
 import { loadMatches, loadOdds } from './data'
 import { predictMatch } from './predictor'
 import type { Match, Odds } from './types'
-import { getCachedPrediction, getCachedPredictionsForMatch, setCachedPrediction } from './cache'
+import {
+  getAllCachedPredictions,
+  getCachedPrediction,
+  getCachedPredictionsForMatch,
+  setCachedPrediction,
+} from './cache'
 import { searchMatchContext } from './search'
 import { mergeWithOddsCache } from './odds-cache'
 
@@ -81,6 +86,85 @@ const predictSchema = z.object({
 app.get('/api/predictions/:matchId', async (req, res, next) => {
   try {
     res.json({ predictions: await getCachedPredictionsForMatch(req.params.matchId) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+function actualResult(match: Match) {
+  if (
+    match.status !== 'finished' ||
+    typeof match.homeScore !== 'number' ||
+    typeof match.awayScore !== 'number'
+  ) {
+    return null
+  }
+  if (match.homeScore > match.awayScore) return 'home'
+  if (match.homeScore < match.awayScore) return 'away'
+  return 'draw'
+}
+
+app.get('/api/analytics/model-performance', async (_req, res, next) => {
+  try {
+    const config = await loadConfig()
+    const { matches } = await loadMatches(config.schedule)
+    const predictions = await getAllCachedPredictions()
+    const finishedMatches = matches.filter((match) => actualResult(match))
+    const matchById = new Map(finishedMatches.map((match) => [match.id, match]))
+
+    const providers = config.providers.map((provider) => {
+      const providerPredictions = predictions
+        .filter((prediction) => prediction.providerId === provider.id)
+        .map((prediction) => {
+          const match = matchById.get(prediction.matchId)
+          const result = match ? actualResult(match) : null
+          return match && result
+            ? {
+                matchId: match.id,
+                matchDate: match.date,
+                matchName: `${match.homeTeam} vs ${match.awayTeam}`,
+                actualResult: result,
+                predictedResult: prediction.predictedResult,
+                correct: prediction.predictedResult === result,
+                confidence: prediction.confidence,
+                scoreline: prediction.scoreline,
+                createdAt: prediction.createdAt,
+              }
+            : null
+        })
+        .filter(Boolean)
+        .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime())
+
+      let correct = 0
+      const trend = providerPredictions.map((item, index) => {
+        if (item.correct) correct += 1
+        return {
+          matchId: item.matchId,
+          matchDate: item.matchDate,
+          matchName: item.matchName,
+          total: index + 1,
+          correct,
+          accuracy: correct / (index + 1),
+        }
+      })
+
+      return {
+        providerId: provider.id,
+        providerName: provider.name,
+        model: provider.model,
+        total: providerPredictions.length,
+        correct,
+        accuracy: providerPredictions.length ? correct / providerPredictions.length : 0,
+        predictions: providerPredictions,
+        trend,
+      }
+    })
+
+    res.json({
+      finishedMatches: finishedMatches.length,
+      evaluatedPredictions: providers.reduce((sum, provider) => sum + provider.total, 0),
+      providers,
+    })
   } catch (error) {
     next(error)
   }
