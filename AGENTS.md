@@ -47,7 +47,7 @@ npm run cli -- config
 - Providers are OpenAI-compatible chat completion endpoints.
 - The public repo must contain only placeholder keys.
 - Use `npm run cli -- config` for redacted provider status.
-- Prediction outputs are informational and are not betting advice.
+- The project is for entertainment and learning only. Prediction outputs are not betting, investment, or decision-making advice.
 
 ## UI Rules
 
@@ -56,4 +56,3 @@ npm run cli -- config
   - `docs/screenshots/dashboard.zh-CN.png`
   - `docs/screenshots/dashboard.en.png`
 - Avoid exposing configuration warnings or secret paths in the UI.
-

@@ -8,7 +8,7 @@
 
 </div>
 
-> This project is for research, learning, and prototyping only. Odds scraping depends on public page structure and should be replaced with an authorized data provider for production use. Never commit real API keys.
+> **Disclaimer**: This project is for entertainment and learning only. It is not betting, investment, or decision-making advice. Fixtures, odds, and model predictions may be delayed, incomplete, or incorrect. Do not use them for betting or any financial activity. Odds scraping depends on public page structure and should be replaced with an authorized data provider for production use. Never commit real API keys.
 
 ![FIFA Predictions dashboard](docs/screenshots/dashboard.en.png)
 
@@ -212,7 +212,7 @@ npm run cli -- check-data
 - Do not commit `.env` or `.env.local`
 - Do not commit cache files containing private analysis context
 - Use authorized sports and odds data providers for production
-- Predictions are not betting advice
+- This project is for entertainment and learning only; predictions are not betting, investment, or decision-making advice
 
 ## License
 
