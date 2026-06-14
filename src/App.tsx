@@ -569,6 +569,33 @@ function averageProbabilities(
   }
 }
 
+function majorityPredictionResult(
+  predictions: Prediction[],
+  field: 'predictedResult' | 'handicapPredictedResult',
+  probabilities: ResultProbabilities | null,
+): ResultKey {
+  const counts: Record<ResultKey, number> = { home: 0, draw: 0, away: 0 }
+  predictions.forEach((prediction) => {
+    const result = prediction[field] ?? prediction.predictedResult
+    counts[result] += 1
+  })
+
+  const highestVote = Math.max(counts.home, counts.draw, counts.away)
+  const candidates = (Object.keys(counts) as ResultKey[]).filter(
+    (result) => counts[result] === highestVote,
+  )
+
+  if (!highestVote) {
+    return probabilities ? resultFromProbabilities(probabilities) : 'draw'
+  }
+
+  if (candidates.length === 1 || !probabilities) {
+    return candidates[0]
+  }
+
+  return candidates.sort((a, b) => probabilities[b] - probabilities[a])[0]
+}
+
 const performanceColors = ['#34d399', '#8b5cf6', '#f8fafc', '#ffd66b', '#38bdf8']
 
 function AccuracyTrendChart({
@@ -931,6 +958,26 @@ function App() {
   const ensembleHandicapProbabilities = useMemo(
     () => averageProbabilities(selectedPredictions, 'calibratedHandicapProbabilities'),
     [selectedPredictions],
+  )
+
+  const ensembleStandardResult = useMemo(
+    () =>
+      majorityPredictionResult(
+        selectedPredictions,
+        'predictedResult',
+        ensembleStandardProbabilities,
+      ),
+    [ensembleStandardProbabilities, selectedPredictions],
+  )
+
+  const ensembleHandicapResult = useMemo(
+    () =>
+      majorityPredictionResult(
+        selectedPredictions,
+        'handicapPredictedResult',
+        ensembleHandicapProbabilities,
+      ),
+    [ensembleHandicapProbabilities, selectedPredictions],
   )
 
   function predictionsForResult(result: Prediction['predictedResult']) {
@@ -1464,9 +1511,7 @@ function App() {
                         <div className="ensemble-grid">
                           <div>
                             <span>{ui.standardPrediction}</span>
-                            <strong>
-                              {ui.result[resultFromProbabilities(ensembleStandardProbabilities)]}
-                            </strong>
+                            <strong>{ui.result[ensembleStandardResult]}</strong>
                             <small>
                               {ui.homeWin} {formatPercent(ensembleStandardProbabilities.home)}
                               {' · '}
@@ -1478,11 +1523,7 @@ function App() {
                           {ensembleHandicapProbabilities ? (
                             <div>
                               <span>{ui.handicapPrediction}</span>
-                              <strong>
-                                {ui.result[
-                                  resultFromProbabilities(ensembleHandicapProbabilities)
-                                ]}
-                              </strong>
+                              <strong>{ui.result[ensembleHandicapResult]}</strong>
                               <small>
                                 {ui.homeWin} {formatPercent(ensembleHandicapProbabilities.home)}
                                 {' · '}

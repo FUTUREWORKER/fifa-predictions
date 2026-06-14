@@ -167,9 +167,15 @@ function parsePredictionText(
       handicapProbabilities,
       marketProbabilities(odds?.handicapHome, odds?.handicapDraw, odds?.handicapAway),
     )
+    const calibratedTopResult = topResult(calibratedProbabilities)
+    const calibratedTopHandicapResult = topResult(calibratedHandicapProbabilities)
+    const finalPredictedResult = scorelineResult ?? calibratedTopResult
+    const finalHandicapPredictedResult =
+      scorelineHandicapResult ?? calibratedTopHandicapResult
+
     return {
-      predictedResult: topResult(calibratedProbabilities),
-      handicapPredictedResult: topResult(calibratedHandicapProbabilities),
+      predictedResult: finalPredictedResult,
+      handicapPredictedResult: finalHandicapPredictedResult,
       standardProbabilities,
       handicapProbabilities,
       calibratedProbabilities,
@@ -199,10 +205,21 @@ function parsePredictionText(
               `服务端检测到比分 ${rawScoreline} 与标准盘结论不一致，已按比分自动修正为 ${scorelineResult}。`,
             ]
           : []),
+        ...(scorelineResult && scorelineResult !== calibratedTopResult
+          ? [
+              `盘口校准最高项为 ${calibratedTopResult}，但比分 ${rawScoreline} 推导为 ${scorelineResult}；最终标准盘按比分一致性保留为 ${scorelineResult}。`,
+            ]
+          : []),
         ...(scorelineHandicapResult &&
         scorelineHandicapResult !== parsed.handicapPredictedResult
           ? [
               `服务端检测到比分 ${rawScoreline} 与让球盘结论不一致，已按让球 ${odds?.handicap} 自动修正为 ${scorelineHandicapResult}。`,
+            ]
+          : []),
+        ...(scorelineHandicapResult &&
+        scorelineHandicapResult !== calibratedTopHandicapResult
+          ? [
+              `盘口校准最高项为 ${calibratedTopHandicapResult}，但比分 ${rawScoreline} 按让球 ${odds?.handicap} 推导为 ${scorelineHandicapResult}；最终让球盘按比分一致性保留为 ${scorelineHandicapResult}。`,
             ]
           : []),
         ...(Array.isArray(parsed.calibrationNotes) ? parsed.calibrationNotes : []),
