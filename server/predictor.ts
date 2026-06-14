@@ -65,6 +65,35 @@ function normalizeScorelineProbabilities(value: unknown, fallbackScoreline: stri
     : [{ scoreline: fallbackScoreline, probability: 1 }]
 }
 
+function normalizeScoreline(value = '') {
+  const match = value
+    .replace(/[：:]/g, '-')
+    .replace(/\s+/g, '')
+    .match(/^(\d+)-(\d+)$/)
+  return match ? `${Number(match[1])}-${Number(match[2])}` : ''
+}
+
+function resultFromScoreline(scoreline: string): Result | null {
+  const normalized = normalizeScoreline(scoreline)
+  if (!normalized) return null
+  const [home, away] = normalized.split('-').map(Number)
+  if (home > away) return 'home'
+  if (home < away) return 'away'
+  return 'draw'
+}
+
+function handicapResultFromScoreline(scoreline: string, handicap?: string): Result | null {
+  const normalized = normalizeScoreline(scoreline)
+  if (!normalized || !handicap) return null
+  const handicapValue = Number(handicap)
+  if (!Number.isFinite(handicapValue)) return null
+  const [home, away] = normalized.split('-').map(Number)
+  const adjustedHome = home + handicapValue
+  if (adjustedHome > away) return 'home'
+  if (adjustedHome < away) return 'away'
+  return 'draw'
+}
+
 function marketProbabilities(
   home?: number,
   draw?: number,
@@ -106,12 +135,15 @@ function parsePredictionText(
 ): Omit<Prediction, 'matchId' | 'providerId' | 'providerName' | 'model' | 'createdAt'> {
   try {
     const parsed = JSON.parse(stripFence(text))
-    const predictedResult = isResult(parsed.predictedResult)
+    const rawScoreline = String(parsed.scoreline ?? '')
+    const scorelineResult = resultFromScoreline(rawScoreline)
+    const predictedResult = scorelineResult ?? (isResult(parsed.predictedResult)
       ? parsed.predictedResult
-      : 'draw'
-    const handicapPredictedResult = isResult(parsed.handicapPredictedResult)
+      : 'draw')
+    const scorelineHandicapResult = handicapResultFromScoreline(rawScoreline, odds?.handicap)
+    const handicapPredictedResult = scorelineHandicapResult ?? (isResult(parsed.handicapPredictedResult)
       ? parsed.handicapPredictedResult
-      : predictedResult
+      : predictedResult)
     const confidence = Number(parsed.confidence ?? 0.5)
     const handicapConfidence =
       typeof parsed.handicapConfidence === 'number'
@@ -142,7 +174,7 @@ function parsePredictionText(
       handicapProbabilities,
       calibratedProbabilities,
       calibratedHandicapProbabilities,
-      scoreline: String(parsed.scoreline ?? ''),
+      scoreline: rawScoreline,
       scorelineProbabilities: normalizeScorelineProbabilities(
         parsed.scorelineProbabilities,
         String(parsed.scoreline ?? ''),
@@ -162,6 +194,17 @@ function parsePredictionText(
         : [],
       calibrationNotes: [
         '服务端已将模型概率与盘口隐含概率按 55%/45% 加权校准。',
+        ...(scorelineResult && scorelineResult !== parsed.predictedResult
+          ? [
+              `服务端检测到比分 ${rawScoreline} 与标准盘结论不一致，已按比分自动修正为 ${scorelineResult}。`,
+            ]
+          : []),
+        ...(scorelineHandicapResult &&
+        scorelineHandicapResult !== parsed.handicapPredictedResult
+          ? [
+              `服务端检测到比分 ${rawScoreline} 与让球盘结论不一致，已按让球 ${odds?.handicap} 自动修正为 ${scorelineHandicapResult}。`,
+            ]
+          : []),
         ...(Array.isArray(parsed.calibrationNotes) ? parsed.calibrationNotes : []),
       ],
       errorTags: Array.isArray(parsed.errorTags) ? parsed.errorTags : [],
