@@ -124,10 +124,31 @@ function actualScoreline(match: Match) {
     : ''
 }
 
+function actualHandicapResult(match: Match, odds?: Odds | null) {
+  if (
+    match.status !== 'finished' ||
+    typeof match.homeScore !== 'number' ||
+    typeof match.awayScore !== 'number' ||
+    !odds?.handicap
+  ) {
+    return null
+  }
+  const handicap = Number(odds.handicap)
+  if (!Number.isFinite(handicap)) return null
+  const adjustedHomeScore = match.homeScore + handicap
+  if (adjustedHomeScore > match.awayScore) return 'home'
+  if (adjustedHomeScore < match.awayScore) return 'away'
+  return 'draw'
+}
+
 app.get('/api/analytics/model-performance', async (_req, res, next) => {
   try {
     const config = await loadConfig()
-    const { matches } = await loadMatches(config.schedule)
+    const [{ matches }, { odds }] = await Promise.all([
+      loadMatches(config.schedule),
+      loadOdds(config.odds),
+    ])
+    const mergedOdds = await mergeWithOddsCache(odds)
     const predictions = await getAllCachedPredictions()
     const finishedMatches = matches.filter((match) => actualResult(match))
     const matchById = new Map(finishedMatches.map((match) => [match.id, match]))
@@ -138,6 +159,8 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
         .map((prediction) => {
           const match = matchById.get(prediction.matchId)
           const result = match ? actualResult(match) : null
+          const matchOdds = match ? findOddsForMatch(match, mergedOdds.odds) : null
+          const handicapResult = match ? actualHandicapResult(match, matchOdds) : null
           return match && result
             ? {
                 matchId: match.id,
@@ -145,9 +168,16 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
                 matchName: `${match.homeTeam} vs ${match.awayTeam}`,
                 actualResult: result,
                 actualScoreline: actualScoreline(match),
+                actualHandicapResult: handicapResult,
+                handicap: matchOdds?.handicap,
                 predictedResult: prediction.predictedResult,
+                handicapPredictedResult: prediction.handicapPredictedResult,
                 predictedScoreline: normalizeScoreline(prediction.scoreline),
                 correct: prediction.predictedResult === result,
+                handicapCorrect:
+                  Boolean(handicapResult && prediction.handicapPredictedResult) &&
+                  prediction.handicapPredictedResult === handicapResult,
+                handicapEvaluable: Boolean(handicapResult && prediction.handicapPredictedResult),
                 scorelineCorrect:
                   normalizeScoreline(prediction.scoreline) === actualScoreline(match),
                 confidence: prediction.confidence,
@@ -161,9 +191,15 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
 
       let correct = 0
       let scorelineCorrect = 0
+      let handicapCorrect = 0
+      let handicapTotal = 0
       const trend = providerPredictions.map((item, index) => {
         if (item.correct) correct += 1
         if (item.scorelineCorrect) scorelineCorrect += 1
+        if (item.handicapEvaluable) {
+          handicapTotal += 1
+          if (item.handicapCorrect) handicapCorrect += 1
+        }
         return {
           matchId: item.matchId,
           matchDate: item.matchDate,
@@ -173,6 +209,9 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
           accuracy: correct / (index + 1),
           scorelineCorrect,
           scorelineAccuracy: scorelineCorrect / (index + 1),
+          handicapCorrect,
+          handicapTotal,
+          handicapAccuracy: handicapTotal ? handicapCorrect / handicapTotal : 0,
         }
       })
 
@@ -183,10 +222,13 @@ app.get('/api/analytics/model-performance', async (_req, res, next) => {
         total: providerPredictions.length,
         correct,
         scorelineCorrect,
+        handicapCorrect,
+        handicapTotal,
         accuracy: providerPredictions.length ? correct / providerPredictions.length : 0,
         scorelineAccuracy: providerPredictions.length
           ? scorelineCorrect / providerPredictions.length
           : 0,
+        handicapAccuracy: handicapTotal ? handicapCorrect / handicapTotal : 0,
         predictions: providerPredictions,
         trend,
       }

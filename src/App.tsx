@@ -65,10 +65,14 @@ type Prediction = {
   providerName: string
   model: string
   predictedResult: 'home' | 'draw' | 'away'
+  handicapPredictedResult?: 'home' | 'draw' | 'away'
   scoreline: string
   confidence: number
+  handicapConfidence?: number
   keyFactors: string[]
   riskNotes: string[]
+  handicapKeyFactors?: string[]
+  handicapRiskNotes?: string[]
   webContext: {
     title: string
     url: string
@@ -86,9 +90,14 @@ type PerformancePrediction = {
   matchName: string
   actualResult: Prediction['predictedResult']
   actualScoreline: string
+  actualHandicapResult?: Prediction['predictedResult'] | null
+  handicap?: string
   predictedResult: Prediction['predictedResult']
+  handicapPredictedResult?: Prediction['predictedResult']
   predictedScoreline: string
   correct: boolean
+  handicapCorrect: boolean
+  handicapEvaluable: boolean
   scorelineCorrect: boolean
   confidence: number
   scoreline: string
@@ -104,6 +113,9 @@ type PerformanceTrendPoint = {
   accuracy: number
   scorelineCorrect: number
   scorelineAccuracy: number
+  handicapCorrect: number
+  handicapTotal: number
+  handicapAccuracy: number
 }
 
 type ProviderPerformance = {
@@ -113,8 +125,11 @@ type ProviderPerformance = {
   total: number
   correct: number
   scorelineCorrect: number
+  handicapCorrect: number
+  handicapTotal: number
   accuracy: number
   scorelineAccuracy: number
+  handicapAccuracy: number
   predictions: PerformancePrediction[]
   trend: PerformanceTrendPoint[]
 }
@@ -160,6 +175,8 @@ const copy = {
     justNow: '刚刚',
     noOdds: '当前比赛暂未匹配到公开盘口',
     modelPrediction: '模型预测',
+    standardPrediction: '标准盘',
+    handicapPrediction: '让球盘',
     pendingConfig: '待配置',
     predicting: '预测中',
     startPrediction: '开始预测',
@@ -179,16 +196,21 @@ const copy = {
     evaluatedPredictions: '已评估预测',
     finishedForReview: '可回测完赛',
     accuracyTrend: '命中率走势',
+    handicapAccuracyTrend: '让球命中率走势',
     scorelineAccuracyTrend: '比分命中率走势',
     latestAccuracy: '当前命中率',
+    latestHandicapAccuracy: '当前让球命中率',
     latestScorelineAccuracy: '当前比分命中率',
     correctCount: '命中',
+    handicapCorrectCount: '让球命中',
     scorelineCorrectCount: '比分命中',
     predictionHistory: '预测历史',
     noPerformance: '暂无可评估的预测历史。先对已完赛或即将完赛的比赛生成预测，完赛后这里会自动统计。',
     actual: '赛果',
+    actualHandicap: '让球赛果',
     actualScore: '实际比分',
     predicted: '预测',
+    handicap: '让球',
     predictedScore: '预测比分',
     correct: '正确',
     missed: '未中',
@@ -237,6 +259,8 @@ const copy = {
     justNow: 'just now',
     noOdds: 'No public odds matched for this match yet',
     modelPrediction: 'Model Predictions',
+    standardPrediction: '1X2',
+    handicapPrediction: 'Handicap',
     pendingConfig: 'Not configured',
     predicting: 'Predicting',
     startPrediction: 'Start Prediction',
@@ -256,16 +280,21 @@ const copy = {
     evaluatedPredictions: 'evaluated predictions',
     finishedForReview: 'finished matches',
     accuracyTrend: 'Accuracy Trend',
+    handicapAccuracyTrend: 'Handicap Accuracy Trend',
     scorelineAccuracyTrend: 'Scoreline Accuracy Trend',
     latestAccuracy: 'Current accuracy',
+    latestHandicapAccuracy: 'Current handicap accuracy',
     latestScorelineAccuracy: 'Current scoreline accuracy',
     correctCount: 'correct',
+    handicapCorrectCount: 'handicap correct',
     scorelineCorrectCount: 'scoreline correct',
     predictionHistory: 'Prediction History',
     noPerformance: 'No evaluated prediction history yet. Generate predictions first; finished matches will be scored here automatically.',
     actual: 'Actual',
+    actualHandicap: 'Handicap actual',
     actualScore: 'Actual score',
     predicted: 'Predicted',
+    handicap: 'Handicap',
     predictedScore: 'Predicted score',
     correct: 'Correct',
     missed: 'Missed',
@@ -494,7 +523,7 @@ function AccuracyTrendChart({
 }: {
   providers: ProviderPerformance[]
   language: Language
-  metric: 'accuracy' | 'scorelineAccuracy'
+  metric: 'accuracy' | 'handicapAccuracy' | 'scorelineAccuracy'
 }) {
   const width = 860
   const height = 260
@@ -625,6 +654,10 @@ function PerformanceView({
                   <strong>{Math.round(provider.accuracy * 100)}%</strong>
                 </div>
                 <div className="metric-row">
+                  <span>{ui.latestHandicapAccuracy}</span>
+                  <strong>{Math.round(provider.handicapAccuracy * 100)}%</strong>
+                </div>
+                <div className="metric-row">
                   <span>{ui.latestScorelineAccuracy}</span>
                   <strong>{Math.round(provider.scorelineAccuracy * 100)}%</strong>
                 </div>
@@ -632,6 +665,12 @@ function PerformanceView({
                   <span>{ui.correctCount}</span>
                   <strong>
                     {provider.correct}/{provider.total}
+                  </strong>
+                </div>
+                <div className="metric-row">
+                  <span>{ui.handicapCorrectCount}</span>
+                  <strong>
+                    {provider.handicapCorrect}/{provider.handicapTotal}
                   </strong>
                 </div>
                 <div className="metric-row">
@@ -684,6 +723,26 @@ function PerformanceView({
             </div>
           </div>
 
+          <div className="trend-panel">
+            <div className="panel-title">
+              <TrendingUp size={18} />
+              {ui.handicapAccuracyTrend}
+            </div>
+            <AccuracyTrendChart
+              providers={rankedProviders}
+              language={language}
+              metric="handicapAccuracy"
+            />
+            <div className="chart-legend">
+              {rankedProviders.map((provider, index) => (
+                <span key={provider.providerId}>
+                  <i style={{ background: performanceColors[index % performanceColors.length] }} />
+                  {provider.providerName}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div className="history-panel">
             <div className="panel-title">{ui.predictionHistory}</div>
             <div className="history-list">
@@ -716,6 +775,25 @@ function PerformanceView({
                     <div>
                       <span>{ui.actualScore}</span>
                       <strong>{item.actualScoreline}</strong>
+                    </div>
+                    <div>
+                      <span>
+                        {ui.handicap}
+                        {item.handicap ? ` ${item.handicap}` : ''}
+                      </span>
+                      <strong>
+                        {item.handicapPredictedResult
+                          ? ui.result[item.handicapPredictedResult]
+                          : '--'}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>{ui.actualHandicap}</span>
+                      <strong>
+                        {item.actualHandicapResult
+                          ? ui.result[item.actualHandicapResult]
+                          : '--'}
+                      </strong>
                     </div>
                     <b className={item.correct ? 'hit' : 'miss'}>
                       {item.correct ? ui.correct : ui.missed}
@@ -793,6 +871,12 @@ function App() {
   function predictionsForResult(result: Prediction['predictedResult']) {
     return selectedPredictions.filter(
       (prediction) => prediction.predictedResult === result,
+    )
+  }
+
+  function predictionsForHandicapResult(result: Prediction['predictedResult']) {
+    return selectedPredictions.filter(
+      (prediction) => prediction.handicapPredictedResult === result,
     )
   }
 
@@ -1214,6 +1298,14 @@ function App() {
                       {formatOdds(selectedMatch.odds?.handicapHome)}
                       {selectedMatch.odds?.handicapHome ? <i className="up" /> : null}
                     </strong>
+                    <div className="prediction-markers">
+                      {predictionsForHandicapResult('home').map((prediction) => (
+                        <ModelLogo
+                          key={prediction.providerId}
+                          provider={providerForPrediction(prediction)}
+                        />
+                      ))}
+                    </div>
                   </div>
                   <div className="odds-cell">
                     <span>{ui.draw}</span>
@@ -1221,10 +1313,26 @@ function App() {
                       {formatOdds(selectedMatch.odds?.handicapDraw)}
                       {selectedMatch.odds?.handicapDraw ? <i className="down" /> : null}
                     </strong>
+                    <div className="prediction-markers">
+                      {predictionsForHandicapResult('draw').map((prediction) => (
+                        <ModelLogo
+                          key={prediction.providerId}
+                          provider={providerForPrediction(prediction)}
+                        />
+                      ))}
+                    </div>
                   </div>
                   <div className="odds-cell">
                     <span>{ui.homeLoss}</span>
                     <strong>{formatOdds(selectedMatch.odds?.handicapAway)}</strong>
+                    <div className="prediction-markers">
+                      {predictionsForHandicapResult('away').map((prediction) => (
+                        <ModelLogo
+                          key={prediction.providerId}
+                          provider={providerForPrediction(prediction)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1302,6 +1410,14 @@ function App() {
                           <h3>
                             {ui.result[prediction.predictedResult]} · {prediction.scoreline}
                           </h3>
+                          {prediction.handicapPredictedResult ? (
+                            <div className="prediction-mini-market">
+                              <span>{ui.standardPrediction}</span>
+                              <strong>{ui.result[prediction.predictedResult]}</strong>
+                              <span>{ui.handicapPrediction}</span>
+                              <strong>{ui.result[prediction.handicapPredictedResult]}</strong>
+                            </div>
+                          ) : null}
                           <p>{prediction.keyFactors[0] ?? ui.generatedFallback}</p>
                         </button>
                       ))}
@@ -1316,12 +1432,24 @@ function App() {
                           <span>{formatDate(activeAnalysis.createdAt, language, ui.timePending)}</span>
                         </div>
                         <div className="factor-list">
+                          <h4>{ui.standardPrediction}</h4>
                           {activeAnalysis.keyFactors.map((factor) => (
                             <p key={factor}>{factor}</p>
                           ))}
+                          {activeAnalysis.handicapKeyFactors?.length ? (
+                            <>
+                              <h4>{ui.handicapPrediction}</h4>
+                              {activeAnalysis.handicapKeyFactors.map((factor) => (
+                                <p key={factor}>{factor}</p>
+                              ))}
+                            </>
+                          ) : null}
                         </div>
                         <div className="risk-notes">
                           {activeAnalysis.riskNotes.map((note) => (
+                            <span key={note}>{note}</span>
+                          ))}
+                          {activeAnalysis.handicapRiskNotes?.map((note) => (
                             <span key={note}>{note}</span>
                           ))}
                         </div>

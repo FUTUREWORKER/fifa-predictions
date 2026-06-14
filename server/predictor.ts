@@ -17,21 +17,69 @@ function parsePredictionText(
     const parsed = JSON.parse(stripFence(text))
     return {
       predictedResult: parsed.predictedResult,
+      handicapPredictedResult: parsed.handicapPredictedResult,
       scoreline: String(parsed.scoreline ?? ''),
       confidence: Number(parsed.confidence ?? 0.5),
+      handicapConfidence:
+        typeof parsed.handicapConfidence === 'number'
+          ? Number(parsed.handicapConfidence)
+          : undefined,
       keyFactors: Array.isArray(parsed.keyFactors) ? parsed.keyFactors : [],
       riskNotes: Array.isArray(parsed.riskNotes) ? parsed.riskNotes : [],
+      handicapKeyFactors: Array.isArray(parsed.handicapKeyFactors)
+        ? parsed.handicapKeyFactors
+        : [],
+      handicapRiskNotes: Array.isArray(parsed.handicapRiskNotes)
+        ? parsed.handicapRiskNotes
+        : [],
       rawText: text,
     }
   } catch {
     return {
       predictedResult: 'draw',
+      handicapPredictedResult: 'draw',
       scoreline: '1-1',
       confidence: 0.5,
+      handicapConfidence: 0.5,
       keyFactors: ['模型返回了非 JSON 文本，已保留原文供人工判断。'],
       riskNotes: ['请检查该供应商的模型输出格式。'],
+      handicapKeyFactors: [],
+      handicapRiskNotes: [],
       rawText: text,
     }
+  }
+}
+
+function impliedProbability(value?: number) {
+  return typeof value === 'number' && value > 0 ? Number((1 / value).toFixed(4)) : null
+}
+
+function oddsContext(odds?: Odds) {
+  if (!odds) return null
+  return {
+    standard: {
+      homeWin: odds.homeWin,
+      draw: odds.draw,
+      awayWin: odds.awayWin,
+      impliedProbability: {
+        home: impliedProbability(odds.homeWin),
+        draw: impliedProbability(odds.draw),
+        away: impliedProbability(odds.awayWin),
+      },
+    },
+    handicap: {
+      line: odds.handicap,
+      rule:
+        '让球胜平负按主队比分加上 handicap 后再与客队比分比较。例：handicap=-1 表示主队先减 1 球，handicap=1 表示主队先加 1 球。',
+      homeWin: odds.handicapHome,
+      draw: odds.handicapDraw,
+      awayWin: odds.handicapAway,
+      impliedProbability: {
+        home: impliedProbability(odds.handicapHome),
+        draw: impliedProbability(odds.handicapDraw),
+        away: impliedProbability(odds.handicapAway),
+      },
+    },
   }
 }
 
@@ -40,22 +88,33 @@ export function buildPrompt(match: Match, odds?: Odds): ChatMessage[] {
     {
       role: 'system',
       content:
-        '你是世界杯赛果预测分析师。请结合赛程、球队强弱、主客/举办地因素、盘口赔率和不确定性，输出严格 JSON。不要输出 Markdown。',
+        '你是世界杯赛果与竞彩盘口预测分析师。请结合赛程、球队强弱、主客/举办地因素、赔率隐含概率、让球规则、赛程密度、伤停/轮换、旅行与气候、不确定性，输出严格 JSON。不要输出 Markdown。不要因为热门球队名气大就忽略盘口深浅和冷门风险。',
     },
     {
       role: 'user',
       content: JSON.stringify(
         {
-          task: '预测这场世界杯比赛赛果',
+          task: '同时预测这场世界杯比赛的标准胜平负和让球胜平负',
+          scoringNotes: [
+            '标准盘 predictedResult 按原始比分判断：home=主胜，draw=平，away=主负。',
+            '让球盘 handicapPredictedResult 按主队比分 + handicap 后判断：home=让胜，draw=让平，away=让负。',
+            '如果盘口数据缺失，仍需给出让球盘倾向，但必须在风险提示中说明不确定性更高。',
+            'scoreline 必须是你预测的真实比分，不是让球后的比分。',
+          ],
           outputSchema: {
             predictedResult: 'home | draw | away',
+            handicapPredictedResult: 'home | draw | away',
             scoreline: '例如 2-1',
             confidence: '0 到 1 的数字',
+            handicapConfidence: '0 到 1 的数字',
             keyFactors: ['3 到 5 条关键依据，中文'],
             riskNotes: ['1 到 3 条风险提示，中文'],
+            handicapKeyFactors: ['2 到 4 条让球盘依据，中文'],
+            handicapRiskNotes: ['1 到 3 条让球盘风险提示，中文'],
           },
           match,
           odds: odds ?? null,
+          derivedOddsContext: oddsContext(odds),
         },
         null,
         2,

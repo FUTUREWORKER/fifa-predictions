@@ -27,7 +27,17 @@ function decodeDuckUrl(value: string) {
 }
 
 export async function searchMatchContext(match: Match): Promise<WebSearchItem[]> {
-  const query = `${match.homeTeam} ${match.awayTeam} World Cup 2026 preview odds injuries form`
+  const query = [
+    match.homeTeam,
+    match.awayTeam,
+    'World Cup 2026',
+    'preview',
+    'team news',
+    'injuries',
+    'probable lineup',
+    'odds handicap',
+    'recent form',
+  ].join(' ')
   const url = `https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 8000)

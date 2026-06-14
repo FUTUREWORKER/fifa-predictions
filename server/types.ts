@@ -60,10 +60,14 @@ export type Prediction = {
   providerName: string
   model: string
   predictedResult: 'home' | 'draw' | 'away'
+  handicapPredictedResult?: 'home' | 'draw' | 'away'
   scoreline: string
   confidence: number
+  handicapConfidence?: number
   keyFactors: string[]
   riskNotes: string[]
+  handicapKeyFactors?: string[]
+  handicapRiskNotes?: string[]
   webContext: {
     title: string
     url: string
