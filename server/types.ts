@@ -61,6 +61,30 @@ export type Prediction = {
   model: string
   predictedResult: 'home' | 'draw' | 'away'
   handicapPredictedResult?: 'home' | 'draw' | 'away'
+  standardProbabilities?: {
+    home: number
+    draw: number
+    away: number
+  }
+  handicapProbabilities?: {
+    home: number
+    draw: number
+    away: number
+  }
+  calibratedProbabilities?: {
+    home: number
+    draw: number
+    away: number
+  }
+  calibratedHandicapProbabilities?: {
+    home: number
+    draw: number
+    away: number
+  }
+  scorelineProbabilities?: {
+    scoreline: string
+    probability: number
+  }[]
   scoreline: string
   confidence: number
   handicapConfidence?: number
@@ -68,6 +92,9 @@ export type Prediction = {
   riskNotes: string[]
   handicapKeyFactors?: string[]
   handicapRiskNotes?: string[]
+  contrarianNotes?: string[]
+  calibrationNotes?: string[]
+  errorTags?: string[]
   webContext: {
     title: string
     url: string

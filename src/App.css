@@ -1058,6 +1058,41 @@ h1 {
   gap: 12px;
 }
 
+.ensemble-card {
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid rgba(52, 211, 153, 0.34);
+  border-radius: 8px;
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.ensemble-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ensemble-grid div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ensemble-grid span,
+.ensemble-grid small {
+  color: rgba(247, 251, 255, 0.58);
+  font-size: 12px;
+}
+
+.ensemble-grid strong {
+  color: #fff;
+  font-size: 22px;
+}
+
 .prediction-mini {
   display: block;
   min-height: 160px;
@@ -1116,6 +1151,19 @@ h1 {
   color: #34d399;
 }
 
+.probability-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  color: rgba(247, 251, 255, 0.56);
+  font-size: 11px;
+}
+
+.probability-row b {
+  color: #fff;
+}
+
 .prediction-mini p {
   margin-top: 10px;
   color: rgba(247, 251, 255, 0.66);
@@ -1167,6 +1215,31 @@ h1 {
   color: inherit;
   background: rgba(255, 255, 255, 0.05);
   text-decoration: none;
+}
+
+.web-context p,
+.probability-panel span {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(247, 251, 255, 0.72);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+}
+
+.probability-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.probability-panel h4 {
+  flex-basis: 100%;
+  margin: 0;
+  color: rgba(247, 251, 255, 0.78);
+  font-size: 14px;
 }
 
 .web-context a strong {

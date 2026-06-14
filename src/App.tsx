@@ -66,6 +66,14 @@ type Prediction = {
   model: string
   predictedResult: 'home' | 'draw' | 'away'
   handicapPredictedResult?: 'home' | 'draw' | 'away'
+  standardProbabilities?: ResultProbabilities
+  handicapProbabilities?: ResultProbabilities
+  calibratedProbabilities?: ResultProbabilities
+  calibratedHandicapProbabilities?: ResultProbabilities
+  scorelineProbabilities?: {
+    scoreline: string
+    probability: number
+  }[]
   scoreline: string
   confidence: number
   handicapConfidence?: number
@@ -73,6 +81,9 @@ type Prediction = {
   riskNotes: string[]
   handicapKeyFactors?: string[]
   handicapRiskNotes?: string[]
+  contrarianNotes?: string[]
+  calibrationNotes?: string[]
+  errorTags?: string[]
   webContext: {
     title: string
     url: string
@@ -83,6 +94,8 @@ type Prediction = {
 
 type Language = 'zh' | 'en'
 type PageView = 'matches' | 'performance'
+type ResultKey = 'home' | 'draw' | 'away'
+type ResultProbabilities = Record<ResultKey, number>
 
 type PerformancePrediction = {
   matchId: string
@@ -175,8 +188,13 @@ const copy = {
     justNow: '刚刚',
     noOdds: '当前比赛暂未匹配到公开盘口',
     modelPrediction: '模型预测',
+    ensemblePrediction: '综合预测',
+    calibratedProbability: '校准概率',
     standardPrediction: '标准盘',
     handicapPrediction: '让球盘',
+    topScores: '比分概率',
+    contrarianReview: '反方审查',
+    calibrationReview: '校准说明',
     pendingConfig: '待配置',
     predicting: '预测中',
     startPrediction: '开始预测',
@@ -259,8 +277,13 @@ const copy = {
     justNow: 'just now',
     noOdds: 'No public odds matched for this match yet',
     modelPrediction: 'Model Predictions',
+    ensemblePrediction: 'Consensus',
+    calibratedProbability: 'Calibrated probability',
     standardPrediction: '1X2',
     handicapPrediction: 'Handicap',
+    topScores: 'Score probabilities',
+    contrarianReview: 'Contrarian Review',
+    calibrationReview: 'Calibration Notes',
     pendingConfig: 'Not configured',
     predicting: 'Predicting',
     startPrediction: 'Start Prediction',
@@ -512,6 +535,38 @@ function ModelLogo({ provider }: { provider: Pick<ProviderStatus, 'id' | 'name'>
       )}
     </span>
   )
+}
+
+function formatPercent(value?: number) {
+  return `${Math.round((value ?? 0) * 100)}%`
+}
+
+function resultFromProbabilities(probabilities: ResultProbabilities): ResultKey {
+  return (Object.entries(probabilities).sort((a, b) => b[1] - a[1])[0]?.[0] ??
+    'draw') as ResultKey
+}
+
+function averageProbabilities(
+  predictions: Prediction[],
+  field: 'calibratedProbabilities' | 'calibratedHandicapProbabilities',
+) {
+  const withProbabilities = predictions
+    .map((prediction) => prediction[field])
+    .filter((item): item is ResultProbabilities => Boolean(item))
+  if (!withProbabilities.length) return null
+  const average = withProbabilities.reduce(
+    (total, item) => ({
+      home: total.home + item.home,
+      draw: total.draw + item.draw,
+      away: total.away + item.away,
+    }),
+    { home: 0, draw: 0, away: 0 },
+  )
+  return {
+    home: average.home / withProbabilities.length,
+    draw: average.draw / withProbabilities.length,
+    away: average.away / withProbabilities.length,
+  }
 }
 
 const performanceColors = ['#34d399', '#8b5cf6', '#f8fafc', '#ffd66b', '#38bdf8']
@@ -867,6 +922,16 @@ function App() {
     selectedPredictions.find(
       (prediction) => prediction.providerId === activeAnalysisProviderId,
     ) ?? selectedPredictions[0]
+
+  const ensembleStandardProbabilities = useMemo(
+    () => averageProbabilities(selectedPredictions, 'calibratedProbabilities'),
+    [selectedPredictions],
+  )
+
+  const ensembleHandicapProbabilities = useMemo(
+    () => averageProbabilities(selectedPredictions, 'calibratedHandicapProbabilities'),
+    [selectedPredictions],
+  )
 
   function predictionsForResult(result: Prediction['predictedResult']) {
     return selectedPredictions.filter(
@@ -1390,6 +1455,46 @@ function App() {
               <div className="prediction-card">
                 {selectedPredictions.length ? (
                   <>
+                    {ensembleStandardProbabilities ? (
+                      <div className="ensemble-card">
+                        <div className="panel-title">
+                          <Activity size={18} />
+                          {ui.ensemblePrediction}
+                        </div>
+                        <div className="ensemble-grid">
+                          <div>
+                            <span>{ui.standardPrediction}</span>
+                            <strong>
+                              {ui.result[resultFromProbabilities(ensembleStandardProbabilities)]}
+                            </strong>
+                            <small>
+                              {ui.homeWin} {formatPercent(ensembleStandardProbabilities.home)}
+                              {' · '}
+                              {ui.draw} {formatPercent(ensembleStandardProbabilities.draw)}
+                              {' · '}
+                              {ui.homeLoss} {formatPercent(ensembleStandardProbabilities.away)}
+                            </small>
+                          </div>
+                          {ensembleHandicapProbabilities ? (
+                            <div>
+                              <span>{ui.handicapPrediction}</span>
+                              <strong>
+                                {ui.result[
+                                  resultFromProbabilities(ensembleHandicapProbabilities)
+                                ]}
+                              </strong>
+                              <small>
+                                {ui.homeWin} {formatPercent(ensembleHandicapProbabilities.home)}
+                                {' · '}
+                                {ui.draw} {formatPercent(ensembleHandicapProbabilities.draw)}
+                                {' · '}
+                                {ui.homeLoss} {formatPercent(ensembleHandicapProbabilities.away)}
+                              </small>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
                     <div className="prediction-grid">
                       {selectedPredictions.map((prediction) => (
                         <button
@@ -1416,6 +1521,14 @@ function App() {
                               <strong>{ui.result[prediction.predictedResult]}</strong>
                               <span>{ui.handicapPrediction}</span>
                               <strong>{ui.result[prediction.handicapPredictedResult]}</strong>
+                            </div>
+                          ) : null}
+                          {prediction.calibratedProbabilities ? (
+                            <div className="probability-row">
+                              <span>{ui.calibratedProbability}</span>
+                              <b>{ui.homeWin} {formatPercent(prediction.calibratedProbabilities.home)}</b>
+                              <b>{ui.draw} {formatPercent(prediction.calibratedProbabilities.draw)}</b>
+                              <b>{ui.homeLoss} {formatPercent(prediction.calibratedProbabilities.away)}</b>
                             </div>
                           ) : null}
                           <p>{prediction.keyFactors[0] ?? ui.generatedFallback}</p>
@@ -1453,6 +1566,32 @@ function App() {
                             <span key={note}>{note}</span>
                           ))}
                         </div>
+                        {activeAnalysis.scorelineProbabilities?.length ? (
+                          <div className="probability-panel">
+                            <h4>{ui.topScores}</h4>
+                            {activeAnalysis.scorelineProbabilities.map((item) => (
+                              <span key={item.scoreline}>
+                                {item.scoreline} · {formatPercent(item.probability)}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                        {activeAnalysis.contrarianNotes?.length ? (
+                          <div className="web-context">
+                            <h4>{ui.contrarianReview}</h4>
+                            {activeAnalysis.contrarianNotes.map((note) => (
+                              <p key={note}>{note}</p>
+                            ))}
+                          </div>
+                        ) : null}
+                        {activeAnalysis.calibrationNotes?.length ? (
+                          <div className="web-context">
+                            <h4>{ui.calibrationReview}</h4>
+                            {activeAnalysis.calibrationNotes.map((note) => (
+                              <p key={note}>{note}</p>
+                            ))}
+                          </div>
+                        ) : null}
                         {activeAnalysis.webContext?.length ? (
                           <div className="web-context">
                             <h4>{ui.webContext}</h4>
